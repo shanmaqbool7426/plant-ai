@@ -34,3 +34,8 @@ externalPort = 3000
 [[ports]]
 localPort = 20443
 externalPort = 3001
+
+[userenv]
+
+[userenv.shared]
+PLANTNET_API_KEY = "2b10zNLUWhUS8zCUPS6tzTmO"
