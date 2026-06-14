@@ -3,6 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { connectMongo } from "./lib/mongodb";
 
 const app: Express = express();
 
@@ -11,16 +12,10 @@ app.use(
     logger,
     serializers: {
       req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
+        return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
       },
       res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
+        return { statusCode: res.statusCode };
       },
     },
   }),
@@ -28,7 +23,11 @@ app.use(
 app.use(cors());
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true, limit: "25mb" }));
-
 app.use("/api", router);
+
+// Connect to MongoDB (non-blocking — server starts even if DB is slow)
+connectMongo().catch((err) => {
+  logger.error({ err }, "MongoDB failed to connect");
+});
 
 export default app;
