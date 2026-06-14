@@ -21,13 +21,13 @@ function NativeTabLayout() {
         <Icon sf={{ default: "leaf", selected: "leaf.fill" }} />
         <Label>My Garden</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="history">
+        <Icon sf={{ default: "clock", selected: "clock.fill" }} />
+        <Label>History</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="reminders">
         <Icon sf={{ default: "bell", selected: "bell.fill" }} />
         <Label>Reminders</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="explore">
-        <Icon sf={{ default: "magnifyingglass", selected: "magnifyingglass" }} />
-        <Label>Explore</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: "person", selected: "person.fill" }} />
@@ -97,6 +97,18 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="history"
+        options={{
+          title: "History",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="clock" tintColor={color} size={24} />
+            ) : (
+              <Ionicons name="time-outline" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
         name="reminders"
         options={{
           title: "Reminders",
@@ -105,18 +117,6 @@ function ClassicTabLayout() {
               <SymbolView name="bell" tintColor={color} size={24} />
             ) : (
               <Feather name="bell" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: "Explore",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="magnifyingglass" tintColor={color} size={24} />
-            ) : (
-              <Feather name="search" size={22} color={color} />
             ),
         }}
       />
@@ -132,6 +132,7 @@ function ClassicTabLayout() {
             ),
         }}
       />
+      <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );
 }
