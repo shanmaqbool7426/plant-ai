@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "PlantID - Plant Identifier"
+version = "1.0.0"
+id = "artifacts/plant-id"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20443
+
+[services.development]
+run = "pnpm --filter @workspace/plant-id run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/plant-id", "run", "build" ]
+publicDir = "artifacts/plant-id/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20443"
+BASE_PATH = "/"
