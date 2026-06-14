@@ -18,6 +18,7 @@ import Animated, { FadeInUp, FadeInDown } from "react-native-reanimated";
 
 import { useGarden } from "@/context/GardenContext";
 import { useReminders } from "@/context/RemindersContext";
+import { getCareDifficulty } from "@/utils/careDifficulty";
 
 const { height } = Dimensions.get("window");
 const TAB_OPTIONS = ["Overview", "Care", "Explore"] as const;
@@ -54,6 +55,7 @@ export default function Results() {
   const [showMore, setShowMore] = useState(false);
 
   const plant = pendingIdentification;
+  const difficulty = plant ? getCareDifficulty(plant) : null;
 
   if (!plant) {
     return (
@@ -198,8 +200,50 @@ export default function Results() {
             </Animated.View>
           )}
 
-          {activeTab === "Care" && (
+          {activeTab === "Care" && difficulty && (
             <Animated.View entering={FadeInDown.duration(200)}>
+              <View style={[styles.difficultyBanner, { backgroundColor: difficulty.bgColor, borderColor: difficulty.color + "33" }]}>
+                <View style={[styles.difficultyIconWrap, { backgroundColor: difficulty.color + "22" }]}>
+                  <Ionicons name={difficulty.icon as any} size={22} color={difficulty.color} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.difficultyLevel, { color: difficulty.color }]}>{difficulty.level} Care</Text>
+                  <Text style={styles.difficultyDesc}>
+                    {difficulty.level === "Easy"
+                      ? "Great for beginners — low maintenance"
+                      : difficulty.level === "Moderate"
+                      ? "Some attention needed — good for hobbyists"
+                      : "Requires regular care and experience"}
+                  </Text>
+                </View>
+                <View style={[styles.scoreCircle, { borderColor: difficulty.color }]}>
+                  <Text style={[styles.scoreText, { color: difficulty.color }]}>{difficulty.score}</Text>
+                  <Text style={[styles.scoreMax, { color: difficulty.color + "99" }]}>/10</Text>
+                </View>
+              </View>
+
+              <View style={styles.breakdownList}>
+                {difficulty.breakdown.map((item) => (
+                  <View key={item.label} style={styles.breakdownRow}>
+                    <Text style={styles.breakdownLabel}>{item.label}</Text>
+                    <Text style={styles.breakdownNote}>{item.note}</Text>
+                    <View style={styles.breakdownDots}>
+                      {[1, 2, 3].map((i) => (
+                        <View
+                          key={i}
+                          style={[
+                            styles.breakdownDot,
+                            i <= item.points
+                              ? { backgroundColor: difficulty.color }
+                              : { backgroundColor: "#E0E9E4" },
+                          ]}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                ))}
+              </View>
+
               <Text style={styles.sectionTitle}>Care Schedule</Text>
               <View style={styles.careGrid}>
                 <View style={styles.careCard}>
@@ -318,6 +362,27 @@ const styles = StyleSheet.create({
   infoLabel: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular", color: "#6B8C7A" },
   infoValue: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#1a2e1a", maxWidth: "45%" },
   careSummaryText: { fontSize: 14, fontFamily: "Inter_400Regular", color: "#6B8C7A", lineHeight: 22 },
+  difficultyBanner: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1,
+  },
+  difficultyIconWrap: {
+    width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center",
+  },
+  difficultyLevel: { fontSize: 15, fontFamily: "Inter_700Bold", marginBottom: 2 },
+  difficultyDesc: { fontSize: 12, fontFamily: "Inter_400Regular", color: "#6B8C7A" },
+  scoreCircle: {
+    width: 44, height: 44, borderRadius: 22, borderWidth: 2,
+    alignItems: "center", justifyContent: "center",
+  },
+  scoreText: { fontSize: 16, fontFamily: "Inter_700Bold", lineHeight: 18 },
+  scoreMax: { fontSize: 9, fontFamily: "Inter_500Medium", lineHeight: 10 },
+  breakdownList: { gap: 10, marginBottom: 20 },
+  breakdownRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  breakdownLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#1a2e1a", width: 72 },
+  breakdownNote: { fontSize: 12, fontFamily: "Inter_400Regular", color: "#6B8C7A", flex: 1 },
+  breakdownDots: { flexDirection: "row", gap: 4 },
+  breakdownDot: { width: 8, height: 8, borderRadius: 4 },
   careGrid: { flexDirection: "row", gap: 12, marginBottom: 16 },
   careCard: { flex: 1, backgroundColor: "#FAFAF8", borderRadius: 14, padding: 14, alignItems: "center", gap: 6 },
   careIcon: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },

@@ -15,11 +15,13 @@ import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInUp } from "react-native-reanimated";
 
 import { useGarden, SavedPlant } from "@/context/GardenContext";
+import { getCareDifficulty } from "@/utils/careDifficulty";
 
 const { width } = Dimensions.get("window");
 const CARD_SIZE = (width - 48) / 2;
 
 function PlantCard({ plant, index }: { plant: SavedPlant; index: number }) {
+  const diff = getCareDifficulty(plant);
   return (
     <Animated.View entering={FadeInUp.delay(index * 60).duration(300)}>
       <TouchableOpacity
@@ -34,6 +36,10 @@ function PlantCard({ plant, index }: { plant: SavedPlant; index: number }) {
             <Ionicons name="leaf" size={32} color="#C4D9CE" />
           </View>
         )}
+        <View style={[styles.diffBadge, { backgroundColor: diff.bgColor }]}>
+          <Ionicons name={diff.icon as any} size={9} color={diff.color} />
+          <Text style={[styles.diffBadgeText, { color: diff.color }]}>{diff.level}</Text>
+        </View>
         <View style={styles.plantInfo}>
           <Text style={styles.plantName} numberOfLines={1}>{plant.commonName}</Text>
           <Text style={styles.plantScientific} numberOfLines={1}>{plant.scientificName}</Text>
@@ -114,6 +120,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 2,
+  },
+  diffBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8,
+    zIndex: 1,
+  },
+  diffBadgeText: {
+    fontSize: 9,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 0.3,
   },
   plantImage: { width: "100%", height: CARD_SIZE * 0.75 },
   plantImagePlaceholder: {
