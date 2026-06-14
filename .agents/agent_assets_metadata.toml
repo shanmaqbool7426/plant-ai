@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "T8hwdYq9bye2CMitTmnVN"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "c7IsaEKLMh5tUj4jRcPUx"
+uri = "file://artifacts/mobile/assets/images/plant_hero.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "Dx0r8EQFE5MIc1a2iZ6VT"
+uri = "file://artifacts/mobile/assets/images/plant_camellia.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "zEW2NXiBGpDgYd2fHbOi4"
+uri = "file://artifacts/mobile/assets/images/plant_dieff.png"
+type = "image"
+title = "generated_image"

@@ -1,0 +1,59 @@
+Build a complete React Native (Expo, SDK 51+) cross-platform mobile app called "LeafLens" — a plant identification and care app modeled closely on PictureThis's UI and feature set, described screen-by-screen below. Use a green (#1F8A4C-ish) and white/cream color scheme matching the reference screenshots, with rounded cards, bottom sheets, and a large circular green camera capture button as the primary action throughout the app.
+
+TECH STACK: React Navigation (bottom tabs + stack navigators), Zustand for state management, expo-camera and expo-image-picker for photo capture, Firebase (Auth, Firestore, Storage) for backend, expo-notifications for reminders, expo-sensors for the light meter, AsyncStorage for offline caching, and RevenueCat for subscription/paywall management with a 7-day free trial.
+
+AI MODEL FOR IDENTIFICATION & DIAGNOSIS: Use Claude Opus (via the Anthropic API with vision input) for plant identification and disease diagnosis rather than a smaller model — accuracy on species-level identification and disease analysis improves significantly with a top-tier vision model. Send the captured photo as base64 image input along with a structured prompt requesting JSON output (plant name, scientific name, family, confidence, toxicity flags, care summary, or disease diagnosis fields), and parse the JSON response into the UI. Fall back to a cheaper model (e.g., Claude Sonnet) for the expert chat feature to control costs, since chat doesn't require image analysis on every message.
+
+SCREENS — build each of these exactly as described:
+
+1. HOME / HERO SCREEN ("Your Ultimate Plant Identifier")
+A full-screen photo preview area showing the camera viewfinder or a selected photo. When a plant is identified, overlay a small white pill-shaped label on the photo pointing to the plant (e.g., "Japanese Camellia") with a connecting line, similar to an AR-style annotation. Below the photo: a gallery/upload icon on the left, a large circular green capture button in the center, and a secondary pill button on the right. At first launch, show a footer badge: "100 Million Downloads — Featured in 100+ Countries".
+
+2. IDENTIFY ANY PLANTS (Capture + Results)
+Top section is a photo grid/carousel showing the captured photo plus thumbnails of similar matches (small square images, one labeled "+3" to indicate more results). Below this, a results card with:
+   - Plant common name as a large bold title (e.g., "Japanese camellia")
+   - Scientific name in italics/gray below it (e.g., "Camellia japonica")
+   - "Also known as: Common camellia, Rose of winter" with a "More" link
+   - Three tabs: "Overview", "Care", "Explore"
+   - Under Overview, a "Basic Info" section listing:
+       - Toxicity to Humans: Non-toxic to humans (with info icon)
+       - Toxicity to Pets: Non-toxic to pets (with info icon)
+       - Weed Potential: Not considered weeds (with info icon)
+   - A bookmark/save icon in the top-right corner of the card to add the plant to "My Garden"
+
+3. PLANT CARE GUIDE (Plant Detail / Care Tab)
+Header shows the plant name (e.g., "Dieffenbachia") with the date it was added (e.g., "December 04, 2024") and a photo of the plant. Three tabs: "Notes", "Care" (active), "Plant Info". Under Care:
+   - "Schedule" section with rows for "Water" (e.g., "in 21 days") and "Fertilize" (e.g., "in 178 days"), each with a toggle switch to enable/disable reminders
+   - "Care Tools" section with rows for "Water Calculator" ("Find out exactly how much water this plant needs" + green "Check" button) and "Light Meter" ("Measure and find the ideal placement for your plant to grow" + green "Check" button), and a "Repotting Checker" row below
+
+4. AUTO-DIAGNOSE PLANTS (Disease Diagnosis Camera Flow)
+Camera viewfinder showing the plant/leaf with on-screen corner brackets guiding the user to frame the leaf. A floating card titled "Causes of Disease" appears with a row of red/pink pill tags such as "Not enough light", "Overwatering", "Poor ventilation", and "Disease Infected" — each representing a possible cause identified by the AI, ranked by likelihood. Below the viewfinder: gallery icon, green circular capture button, and a "Done" button.
+
+5. WATERING REMINDERS (Reminders Screen)
+A list screen titled "Reminders" with a "+" button in the top-right to add a new reminder. Sections grouped by due date:
+   - "Today (3)" header with a "Complete All" link on the right
+   - Each reminder row shows: plant thumbnail photo, plant common name (bold) and scientific name (gray, smaller) below it, the care type (e.g., "Watering"), and two circular action buttons on the right — a green checkmark (mark done) and an orange icon (snooze/skip)
+   - Further sections: "In 2 days (1)" and "Further (3)" as collapsible groups, each showing a chevron to expand
+
+6. IDENTIFY POISONOUS PLANTS (Toxicity Screen)
+Camera/photo view of a plant with corner-bracket framing guides. A floating card at the bottom shows toxicity results as three labeled icon-buttons in a row: "Slightly Toxic to Humans" (person icon), "Toxic to Dogs" (paw icon), "Toxic to Cats" (cat icon) — each in its own rounded card with the icon on top and label below, color-coded (e.g., red/orange for toxic). Below: gallery icon, green capture button, "Done" button.
+
+7. CURE SICK PLANTS (Before/After Comparison)
+A full-screen image comparison slider — left side labeled "Before" (showing the diseased plant with yellow/brown leaves), right side labeled "After" (showing the same plant healthy and green), divided by a draggable vertical green slider line the user can drag to compare.
+
+8. SMART PLANT FINDER (Plant Search/Matcher)
+A results screen titled "Matched Plants (100)" with a horizontal row of removable filter chips at the top (e.g., "Flowering Plants ✕", "Heat-loving ✕", "Pet-friendly ✕"). Below, a vertical list of plant result cards, each containing: a square thumbnail photo, the plant's common name (bold) and scientific name (gray italic) below it, a row of small attribute tags with icons (e.g., "Long-flowering", "Deer-resistant", "Repeat bloomer", "Pet-safe", "Disease resist"), and a heart/save icon on the right edge of the card.
+
+ADDITIONAL CORE FEATURES (not shown in screenshots but required):
+- Onboarding flow (3-4 slides) and Auth (email, Google, Apple Sign-In, guest mode)
+- "My Garden" tab: grid of saved plants, tap to open the Plant Care Guide screen for that plant
+- Expert Chat screen: simple chat UI for gardening questions
+- Subscription paywall: soft paywall shown after the first identification, 7-day free trial via RevenueCat, free tier limited to ~3 identifications/day
+
+NAVIGATION: Bottom tabs = Home (camera/identify), My Garden, Reminders, Explore/Finder, Profile. Stack screens for Onboarding, Auth, Identification Results, Plant Detail/Care Guide, Diagnosis flow, Toxicity flow, Before/After comparison, Expert Chat, and Paywall.
+
+DATA MODELS (Firestore): users (email, displayName, subscriptionStatus, trialEndDate), plants (userId, commonName, scientificName, family, photoUrl, toxicityToHumans, toxicityToPets, weedPotential, careSchedule: {waterIntervalDays, fertilizeIntervalDays, lastWatered, lastFertilized}, dateAdded, notes, photoHistory), reminders (userId, plantId, type, dueDate, completed), diagnoses (userId, plantId, photoUrl, causes[], severity, treatmentSteps, beforeAfterPhotos).
+
+BUILD ORDER: 1) Project setup, theme (green/cream palette, typography, shared components: pill buttons, circular capture button, info cards). 2) Onboarding + Auth. 3) Home/camera screen with capture + gallery picker. 4) Claude vision integration for identification, build the Identify Any Plants results screen with tabs. 5) Plant Detail / Care Guide screen with Schedule and Care Tools. 6) My Garden grid + Firestore CRUD. 7) Reminders screen with grouped sections and notification scheduling. 8) Auto-Diagnose flow with Causes of Disease card. 9) Toxicity identification flow. 10) Before/After comparison screen (manual photo upload for before/after). 11) Smart Plant Finder with filter chips and result cards. 12) RevenueCat paywall integration. 13) Expert Chat. 14) Polish, animations, test on iOS and Android, prepare store assets and privacy policy.
+
+Start by setting up the Expo project, theme/design system, and shared UI components (pill labels, circular capture button, info-row component, tag/chip component) since these are reused across nearly every screen, then proceed through the build order above.

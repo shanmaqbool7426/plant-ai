@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: plants
+    description: Plant identification and diagnosis
+  - name: chat
+    description: Expert chat
 paths:
   /healthz:
     get:
@@ -24,6 +28,78 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /plants/identify:
+    post:
+      operationId: identifyPlant
+      tags: [plants]
+      summary: Identify a plant from an image
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageRequest"
+      responses:
+        "200":
+          description: Plant identification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlantIdentification"
+        "500":
+          description: Identification error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /plants/diagnose:
+    post:
+      operationId: diagnosePlant
+      tags: [plants]
+      summary: Diagnose plant disease from an image
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageRequest"
+      responses:
+        "200":
+          description: Disease diagnosis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlantDiagnosis"
+        "500":
+          description: Diagnosis error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /chat:
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a message to the plant expert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+        "500":
+          description: Chat error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +109,141 @@ components:
           type: string
       required:
         - status
-
+    ImageRequest:
+      type: object
+      properties:
+        image:
+          type: string
+          description: Base64 encoded image data
+        mediaType:
+          type: string
+          description: MIME type (e.g. image/jpeg)
+          default: "image/jpeg"
+      required:
+        - image
+    PlantIdentification:
+      type: object
+      properties:
+        commonName:
+          type: string
+        scientificName:
+          type: string
+        family:
+          type: string
+        confidence:
+          type: number
+          format: float
+        toxicityToHumans:
+          type: string
+        toxicityToPets:
+          type: string
+        weedPotential:
+          type: string
+        aliases:
+          type: array
+          items:
+            type: string
+        careSummary:
+          type: string
+        wateringIntervalDays:
+          type: integer
+        fertilizingIntervalDays:
+          type: integer
+        sunlight:
+          type: string
+        humidity:
+          type: string
+        temperature:
+          type: string
+        soilType:
+          type: string
+      required:
+        - commonName
+        - scientificName
+        - family
+        - confidence
+        - toxicityToHumans
+        - toxicityToPets
+        - weedPotential
+        - aliases
+        - careSummary
+        - wateringIntervalDays
+        - fertilizingIntervalDays
+    DiagnosisCause:
+      type: object
+      properties:
+        name:
+          type: string
+        likelihood:
+          type: string
+          enum: [high, medium, low]
+        description:
+          type: string
+      required:
+        - name
+        - likelihood
+        - description
+    PlantDiagnosis:
+      type: object
+      properties:
+        isHealthy:
+          type: boolean
+        causes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosisCause"
+        severity:
+          type: string
+          enum: [healthy, mild, moderate, severe]
+        treatmentSteps:
+          type: array
+          items:
+            type: string
+        summary:
+          type: string
+      required:
+        - isHealthy
+        - causes
+        - severity
+        - treatmentSteps
+        - summary
+    ChatMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+      required:
+        - role
+        - content
+    ChatRequest:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        plantContext:
+          type: string
+          description: Optional context about the plant being discussed
+      required:
+        - messages
+    ChatResponse:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
