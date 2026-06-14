@@ -6,22 +6,26 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface PlantIdentification {
-  /** Saved scan ID (MongoDB ObjectId) */
-  id?: string;
+export interface ScanRecord {
+  id: string;
   commonName: string;
   scientificName: string;
   family: string;
   confidence: number;
-  toxicityToHumans: string;
-  toxicityToPets: string;
-  weedPotential: string;
   aliases: string[];
   careSummary: string;
   wateringIntervalDays: number;
   fertilizingIntervalDays: number;
-  sunlight?: string;
-  humidity?: string;
-  temperature?: string;
-  soilType?: string;
+  /** @nullable */
+  sunlight?: string | null;
+  /** @nullable */
+  humidity?: string | null;
+  /** @nullable */
+  temperature?: string | null;
+  /** @nullable */
+  soilType?: string | null;
+  toxicityToHumans: string;
+  toxicityToPets: string;
+  weedPotential: string;
+  scannedAt: Date;
 }

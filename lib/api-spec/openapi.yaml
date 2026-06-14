@@ -1,9 +1,8 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: LeafLens Plant Identification API
 servers:
   - url: /api
     description: Base API path
@@ -12,6 +11,10 @@ tags:
     description: Health operations
   - name: plants
     description: Plant identification and diagnosis
+  - name: scans
+    description: Scan history
+  - name: garden
+    description: My Garden (saved plants)
   - name: chat
     description: Expert chat
 paths:
@@ -20,7 +23,6 @@ paths:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -28,6 +30,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
   /plants/identify:
     post:
       operationId: identifyPlant
@@ -38,7 +41,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ImageRequest"
+              $ref: "#/components/schemas/ImageInput"
       responses:
         "200":
           description: Plant identification result
@@ -47,11 +50,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/PlantIdentification"
         "500":
-          description: Identification error
+          description: Error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
   /plants/diagnose:
     post:
       operationId: diagnosePlant
@@ -62,7 +66,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ImageRequest"
+              $ref: "#/components/schemas/ImageInput"
       responses:
         "200":
           description: Disease diagnosis result
@@ -71,11 +75,143 @@ paths:
               schema:
                 $ref: "#/components/schemas/PlantDiagnosis"
         "500":
-          description: Diagnosis error
+          description: Error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
+  /scans:
+    get:
+      operationId: listScans
+      tags: [scans]
+      summary: List recent scan history
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of scans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScanRecord"
+
+  /scans/{id}:
+    get:
+      operationId: getScan
+      tags: [scans]
+      summary: Get a single scan by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scan record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanRecord"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      operationId: deleteScan
+      tags: [scans]
+      summary: Delete a scan record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /garden:
+    get:
+      operationId: listGarden
+      tags: [garden]
+      summary: List plants saved to My Garden
+      responses:
+        "200":
+          description: List of saved plants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GardenPlant"
+    post:
+      operationId: addToGarden
+      tags: [garden]
+      summary: Save a plant to My Garden
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GardenPlantInput"
+      responses:
+        "201":
+          description: Plant saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GardenPlant"
+
+  /garden/{id}:
+    delete:
+      operationId: removeFromGarden
+      tags: [garden]
+      summary: Remove a plant from My Garden
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [scans]
+      summary: Get dashboard stats (total scans, garden size, top families)
+      responses:
+        "200":
+          description: App statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppStats"
+
   /chat:
     post:
       operationId: sendChatMessage
@@ -86,7 +222,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ChatRequest"
+              $ref: "#/components/schemas/ChatInput"
       responses:
         "200":
           description: Chat response
@@ -95,11 +231,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChatResponse"
         "500":
-          description: Chat error
+          description: Error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+
 components:
   schemas:
     HealthStatus:
@@ -107,9 +244,9 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
-    ImageRequest:
+      required: [status]
+
+    ImageInput:
       type: object
       properties:
         image:
@@ -117,13 +254,15 @@ components:
           description: Base64 encoded image data
         mediaType:
           type: string
-          description: MIME type (e.g. image/jpeg)
           default: "image/jpeg"
-      required:
-        - image
+      required: [image]
+
     PlantIdentification:
       type: object
       properties:
+        id:
+          type: string
+          description: Saved scan ID (MongoDB ObjectId)
         commonName:
           type: string
         scientificName:
@@ -169,6 +308,7 @@ components:
         - careSummary
         - wateringIntervalDays
         - fertilizingIntervalDays
+
     DiagnosisCause:
       type: object
       properties:
@@ -179,10 +319,8 @@ components:
           enum: [high, medium, low]
         description:
           type: string
-      required:
-        - name
-        - likelihood
-        - description
+      required: [name, likelihood, description]
+
     PlantDiagnosis:
       type: object
       properties:
@@ -201,12 +339,169 @@ components:
             type: string
         summary:
           type: string
+      required: [isHealthy, causes, severity, treatmentSteps, summary]
+
+    ScanRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        commonName:
+          type: string
+        scientificName:
+          type: string
+        family:
+          type: string
+        confidence:
+          type: number
+        aliases:
+          type: array
+          items:
+            type: string
+        careSummary:
+          type: string
+        wateringIntervalDays:
+          type: integer
+        fertilizingIntervalDays:
+          type: integer
+        sunlight:
+          type: ["string", "null"]
+        humidity:
+          type: ["string", "null"]
+        temperature:
+          type: ["string", "null"]
+        soilType:
+          type: ["string", "null"]
+        toxicityToHumans:
+          type: string
+        toxicityToPets:
+          type: string
+        weedPotential:
+          type: string
+        scannedAt:
+          type: string
+          format: date-time
       required:
-        - isHealthy
-        - causes
-        - severity
-        - treatmentSteps
-        - summary
+        - id
+        - commonName
+        - scientificName
+        - family
+        - confidence
+        - aliases
+        - careSummary
+        - wateringIntervalDays
+        - fertilizingIntervalDays
+        - toxicityToHumans
+        - toxicityToPets
+        - weedPotential
+        - scannedAt
+
+    GardenPlantInput:
+      type: object
+      properties:
+        commonName:
+          type: string
+        scientificName:
+          type: string
+        family:
+          type: string
+        aliases:
+          type: array
+          items:
+            type: string
+        careSummary:
+          type: string
+        wateringIntervalDays:
+          type: integer
+        fertilizingIntervalDays:
+          type: integer
+        sunlight:
+          type: ["string", "null"]
+        humidity:
+          type: ["string", "null"]
+        temperature:
+          type: ["string", "null"]
+        soilType:
+          type: ["string", "null"]
+        toxicityToHumans:
+          type: string
+        toxicityToPets:
+          type: string
+        notes:
+          type: ["string", "null"]
+      required:
+        - commonName
+        - scientificName
+        - family
+
+    GardenPlant:
+      type: object
+      properties:
+        id:
+          type: string
+        commonName:
+          type: string
+        scientificName:
+          type: string
+        family:
+          type: string
+        aliases:
+          type: array
+          items:
+            type: string
+        careSummary:
+          type: ["string", "null"]
+        wateringIntervalDays:
+          type: ["integer", "null"]
+        fertilizingIntervalDays:
+          type: ["integer", "null"]
+        sunlight:
+          type: ["string", "null"]
+        humidity:
+          type: ["string", "null"]
+        temperature:
+          type: ["string", "null"]
+        soilType:
+          type: ["string", "null"]
+        toxicityToHumans:
+          type: ["string", "null"]
+        toxicityToPets:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        savedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - commonName
+        - scientificName
+        - family
+        - savedAt
+
+    AppStats:
+      type: object
+      properties:
+        totalScans:
+          type: integer
+        gardenSize:
+          type: integer
+        topFamilies:
+          type: array
+          items:
+            type: object
+            properties:
+              family:
+                type: string
+              count:
+                type: integer
+            required: [family, count]
+        recentScans:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScanRecord"
+      required: [totalScans, gardenSize, topFamilies, recentScans]
+
     ChatMessage:
       type: object
       properties:
@@ -215,10 +510,9 @@ components:
           enum: [user, assistant]
         content:
           type: string
-      required:
-        - role
-        - content
-    ChatRequest:
+      required: [role, content]
+
+    ChatInput:
       type: object
       properties:
         messages:
@@ -227,16 +521,15 @@ components:
             $ref: "#/components/schemas/ChatMessage"
         plantContext:
           type: string
-          description: Optional context about the plant being discussed
-      required:
-        - messages
+      required: [messages]
+
     ChatResponse:
       type: object
       properties:
         content:
           type: string
-      required:
-        - content
+      required: [content]
+
     ApiError:
       type: object
       properties:
@@ -244,6 +537,4 @@ components:
           type: string
         message:
           type: string
-      required:
-        - error
-        - message
+      required: [error, message]
